@@ -1,0 +1,126 @@
+{% extends "shop/basic.html" %}
+
+{%block title%}Contact Us{% endblock%}
+
+{%block body%}
+<div class="container contact-form" style="padding: 20px;">
+    <form method="post" action="/contact" onsubmit="return validate_form();">
+        <h3>Drop Us a Message</h3>
+        {% csrf_token %}
+       <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <input type="text" name="txtName" id = "txtName" class="form-control" placeholder="Your Name *" value="{{form.txtName}}" />
+                </div>
+                <div class="form-group">
+                    <input type="text" name="txtEmail" id="txtEmail" class="form-control" placeholder="Your Email *" value="{{form.txtEmail}}" />
+                </div>
+                <div class="form-group">
+                    <input type="text" name="txtPhone" id="txtPhone" class="form-control" placeholder="Your Phone Number *" value="{{form.txtPhone}}" />
+                </div>
+                <div class="form-group">
+                    <input type="submit" name="btnSubmit" id="btnSubmit" class="btn btn-dark" value="Send Message" />
+                </div>
+                {%for message in messages %}
+                     {%if "success" in message.tags %}
+                          <div style="color:green; font-weight: bold;"> {{message}} </div>
+                     {%endif%}
+
+                     {%if "email_exist" in message.tags %}
+                          <div style="color:red;"> {{message}} </div>
+                     {%endif%}
+                {%endfor%}
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <textarea name="txtMsg" id="txtMsg" class="form-control" placeholder="Your Message *" style="width: 100%; height: 150px;">{{form.txtMsg}}</textarea>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function validatePhoneNo(phone){
+        var phone_pattern = /\(?([0-9]{3})\)?([ .-]?)([0-9]{3})\2([0-9]{4})/;
+        return phone_pattern.test(phone)
+    }
+
+    function validateEmail(email){
+        var email_pattern = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+        return email_pattern.test(email)
+    }
+
+    function check_valid_email(field_name, field_value){
+        var val = true;
+        test_value = $("#"+field_name).val();
+        $('.'+field_name+'_error').remove();
+        if (test_value !=""){
+            if(validateEmail(test_value) === false){
+                $("<p class='text-danger "+field_name+"_error'> Invalid "+field_value+".</p>").insertAfter($('#'+field_name));
+                val = false;
+            }
+        }
+        return val
+    }
+
+    function check_valid_number(field_name, field_value){
+        var val = true;
+        test_value = $("#"+field_name).val();
+        $('.'+field_name+'_error').remove();
+        if (test_value !=""){
+            if(validatePhoneNo(test_value) === false){
+                $("<p class='text-danger "+field_name+"_error'> Invalid "+field_value+" Number.</p>").insertAfter($('#'+field_name));
+                val = false;
+            }
+        }
+        return val
+    }
+    
+    function check_required(field_name, field_value){
+        var val = true;
+        test_value = $("#"+field_name).val();
+        $('.'+field_name+'_error').remove();
+        if (test_value ==""){
+            $("<p class='text-danger "+field_name+"_error'>"+field_value+" required.</p>").insertAfter($('#'+field_name));
+            val = false;
+        }
+        return val
+    }
+
+    function validate_form(){
+        var val = true;
+        var txtName = $("#txtName").val();
+        var txtEmail = $("#txtEmail").val();
+        var txtPhone = $("#txtPhone").val();
+        var txtMsg = $("#txtMsg").val();
+        var required_field_array  = {
+            "txtName":"Name",
+            "txtEmail":"Email",
+            "txtPhone":"Phone Number",
+            "txtMsg":"Message"
+        };
+        for (var key in required_field_array){
+            val = check_required( key, required_field_array[key])
+            if(val == false){
+                return val
+            }
+
+        }
+
+        if(txtPhone!==""){
+            val = check_valid_number( "txtPhone", "Phone Number")
+            if(val == false){
+                return val
+            }
+        }
+
+        if(txtEmail!==""){
+            val = check_valid_email( "txtEmail", "Email")
+            if(val == false){
+                return val
+            }
+        }
+        return val;
+    }
+</script>
+{% endblock%}

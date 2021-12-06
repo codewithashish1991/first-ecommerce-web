@@ -1,0 +1,209 @@
+{% extends "shop/basic.html" %}
+
+{%block title%}Deal With Us:- Seller Portal{% endblock%}
+{% load static %}
+{%block body%}
+<div class="container container-fluid card" style="padding: 10px; width: 100%">
+	<div class="row">
+		<h1 class="col-md-12">Welcome To Seller Portal</h1>
+
+		<div class="col-sm-8">
+			<div class="card">
+				<div class="card-body">
+					<h4 class="card-title text-center mb-4 mt-1">Seller Register</h4>
+					<hr>
+					<form role="form" method="post" action="/seller-register" onsubmit="return submitRegister();" >
+						{% csrf_token %}
+						<div class="row">
+							<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="form-group">
+									<input type="text" name="first_name" id="first_name" class="form-control input-sm" placeholder="First Name">
+								</div>
+							</div>
+							<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="form-group">
+									<input type="text" name="last_name" id="last_name" class="form-control input-sm" placeholder="Last Name">
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<input type="text" name="email" id="email" class="form-control input-sm" placeholder="Email Address">
+						</div>
+
+						<div class="form-group">
+							<input type="text" name="username" id="username" class="form-control input-sm" placeholder="Username" autocomplete="off">
+						</div>
+
+						<div class="row">
+							<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="form-group">
+									<input type="password" name="password" id="password" class="form-control input-sm" placeholder="Password" autocomplete="off">
+								</div>
+							</div>
+							<div class="col-xs-6 col-sm-6 col-md-6">
+								<div class="form-group">
+									<input type="password" name="password_confirmation" id="password_confirmation" class="form-control input-sm" placeholder="Confirm Password" autocomplete="off">
+								</div>
+							</div>
+						</div>
+
+						<input type="submit" value="Register" class="btn btn-primary btn-block">
+
+					</form>
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-4">
+			<div class="card">
+				<div class="card-body">
+					<div class="card">
+						<article class="card-body">
+							<h4 class="card-title text-center mb-4 mt-1">Seller Login</h4>
+							<hr>
+							<div class="form-group">
+								<a href="/myadmin/login/?next=/myadmin" class="btn btn-primary btn-block" target="_blank">Go To Seller Login  </a>
+							</div> <!-- form-group// -->
+							<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ForgotModal" style="width: 100%;">
+								Forgot password?
+							</button>
+							{%for message in messages %}
+
+			                     {%if "error" in message.tags %}
+			                          <div class="text-danger font-weight-bold text-center"> {{message}} </div>
+			                     {%endif%}
+			                {%endfor%}
+
+						</article>
+					</div> <!-- card.// -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="ForgotModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<form method="post" name="forgot_password" action="/forgot_password">
+				{% csrf_token %}
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel">Forgot Password</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<input type="text" name="f_username" id="f_username" class="form-control input-sm" placeholder="Enter your registerd email" autocomplete="off" required>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="submit" class="btn btn-primary">Save changes</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	function validateEmail(email){
+		var email_pattern = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+		return email_pattern.test(email)
+	}
+
+	function check_required(field_name, field_value){
+		var val = true;
+		test_value = $("#"+field_name).val();
+		$('.'+field_name+'_error').remove();
+		if (test_value ==""){
+			$("<p class='text-danger "+field_name+"_error'>"+field_value+" required.</p>").insertAfter($('#'+field_name));
+			val = false;
+		}
+		return val
+	}
+
+	function check_valid_email(field_name, field_value){
+		var val = true;
+		test_value = $("#"+field_name).val();
+		$('.'+field_name+'_error').remove();
+		if (test_value !=""){
+			if(validateEmail(test_value) === false){
+				$("<p class='text-danger "+field_name+"_error'> Invalid "+field_value+".</p>").insertAfter($('#'+field_name));
+				val = false;
+			}
+		}
+		return val
+	}
+
+	function checkMinLength(field_name, field_value, length=8){
+		var val = true;
+		test_value = $("#"+field_name).val();
+		$('.'+field_name+'_error').remove();
+		if(test_value.length < length){
+			$("<p class='text-danger "+field_name+"_error'> "+field_value+" should be greter then "+length+". characters.</p>").insertAfter($('#'+field_name));
+			val = false;
+		}
+		return val
+	}
+
+	function submitRegister(){
+		var result      = [];
+		var username    = $('#username').val();
+		var password    = $('#password').val();
+		var p_conf      = $('#password_confirmation').val();
+		var required_field_array  = {
+			"first_name":"First Name",
+			"last_name":"Last Name",
+			"email":"Email",
+			"username":"Username",
+			"password":"Password",
+			"password_confirmation":"Conrimation Password"
+		};
+		var ch;
+		for (var key in required_field_array){
+			ch = check_required( key, required_field_array[key]);
+			if(ch == false){
+				result.push(false);
+			}
+		};
+
+		if(result.length==0){
+			var ce = check_valid_email( "email", "Email");
+			if(ce == false){
+				result.push(false);
+			}
+		}
+
+		if(result.length==0){
+			var min_len_field_array  = {
+				"username":"Username",
+				"password":"Password"
+			};
+			var cm;
+			for (var key in min_len_field_array){
+				cm = checkMinLength( key, required_field_array[key], 8)
+				if(cm == false){
+					result.push(false);
+				}
+			}
+		}
+
+		if(result.length==0){
+			$('.password_confirmation_error').remove();
+			if(password !==p_conf){
+				$("<p class='text-danger password_confirmation_error'> Confirmation Password does not match with password.</p>").insertAfter($('#password_confirmation'));
+				result.push(false);
+			}
+		}
+
+		if(result.length==0){
+			return true;
+		}else{
+			return false;
+		}
+	}
+</script>
+{% endblock%}

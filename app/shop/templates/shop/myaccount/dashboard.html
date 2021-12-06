@@ -1,0 +1,116 @@
+{% extends "shop/myaccount/account_basic.html" %}
+
+{%block title%}My Profile - {{ current_user.first_name }} {% endblock%}
+
+{%block body%}
+
+	<div class="col-md-9">
+		<div class="card">
+			<div class="card-body">
+				<h5 class="card-title">Welcome {{ current_user.first_name }} <button class="btn btn-primary" style="float: right;" onclick="enableField();"> Edit Profile</button></h5>
+				{%for message in messages %}
+                     {%if "success" in message.tags %}
+                          <div style="color:green; font-weight: bold;"> {{message}} </div>
+                     {%endif%}
+                {%endfor%}
+				<form method="post" action="/dashboard" onsubmit="return validate_form();" id="myForm">
+                    {%csrf_token%}
+                    <div class="row">
+                    	<div class="col-md-6">
+		                    <div class="form-group">
+		                        <label for="name">First Name</label>
+		                        <input type="text" id="fname" name="fname" class="form-control" value = "{{ current_user.first_name }}"  disabled />
+		                    </div>
+                    	</div>
+                    	<div class="col-md-6">
+		                    <div class="form-group">
+		                        <label for="lname">Last Name</label>
+		                        <input type="lname" id="lname" name="lname" class="form-control" value = "{{ current_user.last_name }}" disabled >
+		                    </div>
+                    	</div>
+                    </div>
+
+                    <div class="row">
+                    	<div class="col-md-6">
+		                    <div class="form-group">
+		                        <label for="email">Email Address</label>
+		                        <input type="email" id="email" name="email" class="form-control" value = "{{ current_user.email_address }}" disabled>
+		                    </div>
+                    	</div>
+                    	<div class="col-md-6">
+		                    <div class="form-group">
+		                        <label for="lname">Gender</label>
+		                        <select  name="gender" class="form-control" id="gender" disabled >
+		                        	<option value="">Select Gender</option>
+		                        	<option value="MALE" {% if current_user.gender == 'MALE' %}selected{% endif %} >Male</option>
+		                        	<option value="FEMALE" {% if current_user.gender == 'FEMALE' %}selected{% endif %}>Female</option>
+		                        </select>
+		                    </div>
+                    	</div>
+                    </div>
+
+                    <div class="row">
+                    	<div class="col-md-6">
+		                    <div class="form-group">
+		                        <label for="mobile_no">Mobile Number</label>
+		                        <input type="text" id="mobile_no" name="mobile_no" class="form-control" value = "{{ current_user.mobile_no }}" disabled>
+		                    </div>
+                    	</div>
+                    </div>
+
+                    <div class="row">
+                    	<div class="col-md-6">
+		                    <div class="form-group">
+		                        <button type="submit" class="btn btn-primary" disabled>Change Profile</button><br>
+		                    </div>
+		                </div>
+		            </div>
+                </form>
+			</div>
+		</div>
+	</div>
+<script type="text/javascript">
+	function validatePhoneNo(phone){
+		var phone_pattern = /\(?([0-9]{3})\)?([ .-]?)([0-9]{3})\2([0-9]{4})/;
+		return phone_pattern.test(phone)
+	}
+
+	function validate_form(){
+		var val = true;
+		fname = $("#fname").val();
+		email = $("#email").val();
+		phone = $("#mobile_no").val();
+		gender = $("#gender").val();
+		$('.name_error').remove();
+		$('.email_error').remove();
+		$('.phone_error').remove();
+		$('.gender_error').remove();
+		if(fname == ""){
+			$("<p class='text-danger name_error'>First Name required.</p>").insertAfter($('#fname'));
+			val = false
+		}
+
+		if(email == ""){
+			$("<p class='text-danger email_error'>Email required.</p>").insertAfter($('#email'));
+			val = false
+		}
+
+		if(phone != ""){
+			if(validatePhoneNo(phone) === false){
+				$("<p class='text-danger phone_error'>Invalid mobile number.</p>").insertAfter($('#mobile_no'));
+				val = false
+			}
+		}
+
+		if(gender == ""){
+			$("<p class='text-danger gender_error'>Gender required.</p>").insertAfter($('#gender'));
+			val = false
+		}
+
+		return val;
+	}
+	function enableField(){
+		$("#myForm :input").prop("disabled", false);
+	}
+</script>
+{% endblock%}

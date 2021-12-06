@@ -1,0 +1,185 @@
+{% extends "shop/basic.html" %}
+
+{%block title%}Checkout{% endblock%}
+
+{%block body%}
+<div class="container card p-5">
+	<div style="margin-left: -10px;">
+		<h2>Checkout </h2>
+	</div>
+	<div class="row" id = "checkout_page">
+		<div class="col-md-4 order-md-2 mb-4">
+			<h4 class="d-flex justify-content-between align-items-center mb-3">
+				<span class="text-muted">My cart</span>
+				<span class="badge badge-secondary badge-pill" id = "cart_count">0</span>
+			</h4>
+			<table class="table table-striped table-hover table-sm">
+				<thead>
+                <tr style="text-align: center;">
+                    <th >Product</th>
+                    <th>Price</th>
+                    <th>Qty</th>
+                    <th>Amount</th>
+                </tr>
+                </thead>
+                <tbody id = "cart-body" style="padding-top:5px; ">
+					
+				</tbody>
+				<tfoot>
+                <tr id="total_row">
+                    <th colspan="3" class="text-right">Total</th>
+                    <th id ="grand_total" style="text-align: center;">$4,000</th>
+                    <th></th>
+                </tr>
+                </tfoot>
+			</table>
+		</div>
+		<div class="col-md-8 order-md-1">
+			<form class="needs-validation" method="post" action="/checkout">
+				{% csrf_token %}
+				<div class="row">
+					<h4 class="mb-3">Delivery Address</h4>
+					<input  name="address" type="hidden" class="custom-control-input" id = "address"/>
+					<div class="list-group col-lg-12">
+						<label> Select an address .</label>
+						{% for add in address%}
+						<label>
+						  <button type="button" class="list-group-item list-group-item-action" style="z-index: 99999" data-id="{{ add.address_id}}">
+						    {{add.name}}, {{add.address}},<br>
+						    {{add.city}}, {{add.state.name}}, {{add.country.name}}<br>
+						    Pincode:- {{add.pincode}}
+						  </button>
+						  </label>
+						  {% empty %}
+						  	<p class="text-danger">You have no address yet. Please add a new address by click below button. </p>
+					  {% endfor %}
+					</div>
+
+					<a href="/my-address" class="btn btn-primary" style="margin-top: 10px;"> Add New Address</a>
+				</div>
+
+
+				<hr class="mb-4">
+
+				<h4 class="mb-3">Payment</h4>
+
+				<div class="d-block my-3">
+					<div class="custom-control custom-radio">
+						<input id="cod" name="paymentMethod" type="radio" class="custom-control-input" value="cod" >
+						<label class="custom-control-label" for="cod">
+						Case On Delivery<label>
+					</div>
+					<div class="custom-control custom-radio">
+						<input id="paypal" name="paymentMethod" type="radio" class="custom-control-input" value = "paypal">
+						<label class="custom-control-label" for="paypal">
+						Paypal<label>
+					</div>
+					
+				</div>
+				<hr class="mb-4">
+				<button class="btn btn-primary btn-lg btn-block" id="place_order" type="submit">Place Order</button>
+				<input type="hidden" name="cart_data" id="cart_data">
+				<input type="hidden" name="cart_total_amout" id="cart_total">
+				<input type="hidden" name="cart_gst_amout" id="cart_gst_amout">
+				<input type="hidden" name="cart_grand_total_amout" id="cart_grand_total_amout">
+				<input type="hidden" name="shipping_cahrge" id="shipping_cahrge">
+				<input type="hidden" name="prod_currency" id="prod_currency">
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	window.onload = function(){
+		var clear_cart = "{{clear_cart}}";
+		if(clear_cart === "True"){
+			localStorage.clear();
+			window.location.href = "/my-orders";
+		}
+		var cartProductCount = localStorage.getItem('cart');
+	    var mycart = JSON.parse(cartProductCount);
+	    count = 0;
+	    if(mycart !== null){
+	        count = mycart.length;
+	    }
+	    document.getElementById('cart_count').innerHTML = count;
+	    if(count == 0){
+	    	var emptyPage = "<h3 class='text-danger col-md-12 text-center mt-4 pt-4'>No Product found in your cart</h3><p class='col-md-12 text-center'>Go to <a href='/'>Home</a> page and add some product in your cart.</p>";
+	    	document.getElementById('checkout_page').innerHTML = emptyPage;
+	    }else{
+		    var token = $(document).find('input[name = "csrfmiddlewaretoken"]').val();
+		   	$.ajax({
+		    	type:"POST",
+		    	url: '/get_cart_product',
+		    	data: {"cartData": cartProductCount, 'csrfmiddlewaretoken': token },
+		    	success: function(data){
+		    		var products = JSON.parse(data);
+		    		var grand_total = 0;
+		    		if(products.length > 0){
+						for(var i = products.length - 1; i >= 0; i--){
+							var prod_id = products[i]['id'];
+							var prod_qty = products[i]['qty'];
+							var prod_name = products[i]['name'];
+							var prod_price = products[i]['price'];
+							var prod_currency = products[i]['currency'];
+							var prod_img = products[i]['image'];
+							var prod_total_quantity = products[i]['total_quantity'];
+							var total_amout = prod_qty*prod_price;
+							grand_total = grand_total + total_amout
+							var cartContent = '<tr style="text-align:center;"><td><img src="/media/'+prod_img +'" class="img-fluid" title = "'+prod_name+'"></td><td>'+prod_currency+prod_price.toLocaleString('en-IN')+'</td><td>'+prod_qty+'</td><td>'+prod_currency + total_amout.toLocaleString('en-IN') +'</td></tr>';
+							$(cartContent).insertAfter($('#cart-body'));
+						}
+						$('#grand_total').html(prod_currency + grand_total.toLocaleString('en-IN'));
+						var gst_price = (18/100)*grand_total;
+						var sub_total = grand_total+ gst_price
+						ship_change = 0;
+						if(prod_currency != "₹"){
+							var shippingCharge = '<tr id="trow-schange"><th colspan="3" class="text-right">Shipping Charge</th><th id ="s_charge" style="text-align: center;">'+prod_currency+'20</th><th></th></tr>';
+							$(shippingCharge).insertAfter($('#total_row'));
+							sub_total = sub_total + 20;
+							ship_change = 20;
+						}
+						sub_total = sub_total.toFixed(2);
+						
+						var gst = '<tr id="trow"><th colspan="3" class="text-right">GST(18%)</th><th id ="s_charge" style="text-align: center;">'+prod_currency+gst_price.toLocaleString('en-IN')+'</th><th></th></tr>';
+						var subTotal = '<tr id="subrow"><th colspan="3" class="text-right">Grand Total</th><th id ="gt" style="text-align: center;">'+prod_currency+parseInt(sub_total).toLocaleString('en-IN')+'</th><th></th></tr>';
+						$(gst).insertAfter($('#total_row'));
+						if(document.body.contains(document.getElementById('trow-schange'))){
+							$(subTotal).insertAfter($('#trow-schange'));
+						}else{
+							$(subTotal).insertAfter($('#trow'));
+						}
+						$("#cart_total").val(grand_total);
+						$("#cart_gst_amout").val(gst_price);
+						$("#cart_grand_total_amout").val(sub_total);
+						$("#shipping_cahrge").val(ship_change);
+						$("#prod_currency").val(prod_currency);
+			    	}else{
+			    		$('#total_row').html('');
+			    		$('.button-body').html('');
+			    		$('<tr><th colspan="4" style="text-align:center; color: red; line-height:100px;">No product found in cart. </th></tr>').insertAfter($('#cart-body'));
+			    	}
+		    	}
+		    });
+	    }
+	    $('.list-group-item').click(function(){
+	    	var address_id = $(this).attr('data-id');
+	    	$('.list-group-item').removeClass("active");
+	    	$(this).addClass('active');
+	    	$("#address").val(address_id);
+	    });
+	    $('#place_order').click(function(){
+	    	var address_id = $("#address").val();
+	    	var paymentMethod = $("input[name='paymentMethod']:checked").val();
+	    	if(address_id == ""){
+	    		alert("Delivery address required.");
+	    		return false;
+	    	}
+	    	if(paymentMethod == undefined){
+	    		alert("Select a payment method.");
+	    		return false;
+	    	}
+	    	$('#cart_data').val(localStorage.getItem('cart'))
+	    });
+	};
+</script>
+{% endblock%}

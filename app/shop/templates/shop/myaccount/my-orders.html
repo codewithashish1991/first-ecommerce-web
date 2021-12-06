@@ -1,0 +1,94 @@
+{% extends "shop/myaccount/account_basic.html" %}
+
+{%block title%}My Orders - {{ current_user.first_name }} {% endblock%}
+
+{%block body%}
+
+	<div class="col-md-9">
+		<div class="card" >
+			<div class="card-body">
+				<h5 class="card-title">
+					My Orders 
+				</h5>
+
+				{%for message in messages %}
+	                 {%if "success" in message.tags %}
+	                      <h5 style="color:green;"> {{message}} </h5>
+	                 {%endif%}
+	            {%endfor%}
+
+				<table class="table">
+					<thead class="thead-dark">
+						<tr>
+							<th scope="col">Order Id</th>
+							<th scope="col">Order Amount</th>
+							<th scope="col">Delievery Address</th>
+							<th scope="col">Payment Method</th>
+							<th scope="col">Order Status</th>
+							<th scope="col">Payment Status</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for ord in orders %}
+						<tr>
+							<th scope="row"><label>
+								<a href="/orders/{{ord.order_id}}">{{ord.order_id}}</a>
+							</th>
+							<td>{{ord.product_currency}} {{ord.product_payable_amount}}</td>
+							<td>
+								{{ord.address}}, <br />
+								{{ord.address.city}} {{ord.address.state}},
+								{{ord.address.country}}
+							</td>
+							<td>{% if ord.payment_method == "cod" %}Cash On Delivery{% endif %}</td>
+							<td>
+								{% if ord.order_latest_status == "ORD" %}
+								<p class="text-info font-weight-bold"> Ordered </p>
+								{% elif ord.order_latest_status == "CLD" %}
+								<p class="text-danger font-weight-bold">Canceled </p>
+								{% elif ord.order_latest_status == "PKD" %}
+								<p class="text-primary font-weight-bold">Packed </p>
+								{% elif ord.order_latest_status == "SPD" %}
+								<p class="text-secondary font-weight-bold">Shipped </p>
+								{% elif ord.order_latest_status == "OFD" %}
+								<p class="text-warning font-weight-bold">Out For Delivery </p>
+								{% else %}
+								<p class="text-success font-weight-bold">Delivered </p>
+								{% endif %}
+							</td>
+						</tr>
+						{% empty %}
+							<th colspan="6"> No order found.</th>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			{% if orders.has_previous or orders.has_next %}
+	        <div class="col-12" style="margin-top: 20px; ">
+	            <nav aria-label="Page navigation example">
+	                <ul class="pagination justify-content-center">
+	                	{% if orders.has_previous %}
+	                    <li class="page-item">
+	                        <a class="page-link" href="?page={{ orders.previous_page_number }}" tabindex="-1" aria-disabled="true"><i class="fas fa-long-arrow-alt-left"></i></a>
+	                    </li>
+	                    {% endif %}
+	                    
+	                    {% for n in page_range %}
+	                    <li class="page-item {% if orders.number == n %}active{% endif%} " aria-current="page">
+	                        <a class="page-link" href="?page={{n}}">{{n}} </a>
+	                    </li>
+	                    {% endfor %}
+	                    {% if orders.has_next %}
+	                    <li class="page-item">
+	                        <a class="page-link" href="?page={{ orders.next_page_number }}"><i class="fas fa-long-arrow-alt-right"></i></a>
+	                    </li>
+	                    {% endif %}
+	                </ul>
+	            </nav>
+	        </div>
+	        {% endif %}
+		</div>
+
+
+	</div>
+{% endblock%}

@@ -1,0 +1,95 @@
+{% extends "shop/myaccount/account_basic.html" %}
+
+{%block title%}My Reviews - {{ current_user.first_name }} {% endblock%}
+
+{%block body%}
+{% load humanize %}
+	<div class="col-md-9" >
+		<!-- Review -->
+		<div class="row card" style="padding: 20px;"><br>
+			<h5 class="card-title" >My Reviews</h5>
+			{%for message in messages %}
+		        {%if "success" in message.tags %}
+		            <div style="color:green; font-weight: bold; padding: 10px;"> {{message}} </div>
+		        {%endif%}
+		    {%endfor%}
+			<div class="row">
+				{% for r in reviews %}
+				<!-- Comments -->
+				<div class="col-xl-3 col-lg-4 col-sm-6 my-6"  style="margin-top: 17px;">
+					<div class="col-12 bg-white text-center product-item" style="padding: 10px;">
+						<div class="col-12">
+							<div style="text-align: center;">
+								<a href="/product-details/{{r.product.slug}}">
+									<img src="/media/{{r.product_image}}" style="width: 100%; height: 150px;"><br>
+								</a>
+								
+							</div>
+							<a href="/product-details/{{r.product.slug}}"><strong class="mr-2">{{r.product.product_name|slice:":25"}}... </strong><br></a>
+							<small>
+								{% for c in review_range %}
+									{% if r.rating >= c %}
+									<i class="fas fa-star"></i>
+									{% else %}
+									<i class="far fa-star"></i>
+									{% endif %}
+								{% endfor %}
+								<!-- <i class="fas fa-star"></i>
+								<i class="fas fa-star"></i>
+								<i class="far fa-star"></i> -->
+							</small>
+						</div>
+						<div class="col-12">
+							{{r.review}}
+						</div>
+						<div class="col-12">
+							<small>
+								<i class="fas fa-clock mr-2"></i>
+								{{ r.updated_at|naturaltime }}
+							</small>
+						</div>
+						
+					<div class="col-12" style="text-align: center; padding-top: 10px;">
+						<a href="/review/delete/{{r.Review_id}}"  class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete it?')">Delete Review</a>
+					</div><br>
+					</div>
+				</div>
+
+				{% empty %}
+						<div class="container" style="padding: 30px;">No review found.</div>
+				<!-- Comments -->
+				{% endfor %}
+
+			</div>
+			{% if reviews.has_previous or reviews.has_next %}
+        <div class="col-12" style="margin-top: 20px; ">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center">
+                	{% if reviews.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ reviews.previous_page_number }}" tabindex="-1" aria-disabled="true"><i class="fas fa-long-arrow-alt-left"></i></a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for n in page_range %}
+                    <li class="page-item {% if reviews.number == n %}active{% endif%} " aria-current="page">
+                        <a class="page-link" href="?page={{n}}">{{n}} </a>
+                    </li>
+                    {% endfor %}
+                    {% if reviews.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ reviews.next_page_number }}"><i class="fas fa-long-arrow-alt-right"></i></a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+		</div>
+		<!-- Review -->
+
+		
+		
+	</div>
+
+{% endblock%}

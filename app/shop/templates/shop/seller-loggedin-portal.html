@@ -1,0 +1,28 @@
+{% extends "shop/basic.html" %}
+
+{%block title%}Deal With Us:- Seller Portal{% endblock%}
+{% load static %}
+{%block body%}
+<div class="container container-fluid card" style="padding: 10px; width: 100%">
+	<div class="row">
+		<h1 class="col-md-12">Welcome To Seller Portal</h1>
+
+		<div class="col-sm-12">
+			<div class="card">
+				<div class="card-body">
+					<h4 class="card-title  mb-4 mt-1">You are loggedin as {{request.user}}</h4>
+					<a href="/seller-logout" target="_blank" class="btn btn-sm float-right btn-primary ml-2">Logout</a>
+					<a href="/myadmin" target="_blank" class="btn btn-sm float-right btn-primary">Go To Admin Panel</a>
+					<p><strong>First Name: </strong> {{request.user.first_name}}</p>
+					<p><strong>Last Name: </strong> {{request.user.last_name}}</p>
+					<p><strong>Email Address: </strong> {{request.user.email}}</p>
+					<p><strong>Password: </strong> *****</p>
+					<p><strong>User Group: </strong> {{ user.groups.all.0 }}</p>
+					<hr>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+{% endblock%}

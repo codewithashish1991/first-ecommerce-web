@@ -1,0 +1,243 @@
+{% extends "shop/myaccount/account_basic.html" %}
+
+{%block title%}Orders details ({{order_details.order_id}}) {% endblock%}
+
+{%block body%}
+
+<div class="col-md-9">
+	<div class="card" >
+		<div class="card-body">
+			<h5 class="card-title">
+				Orders ID :- <span class="text-success font-weight-bold">{{order_details.order_id}}</span></h5>
+				{% if order_details.order_latest_status != 'DLD' and order_details.order_latest_status != 'CLD' %}
+					<h5 class="card-title">
+				Expected Date :- <span class="text-success font-weight-bold">{{order_details.expected_date}}</span></h5>
+				{% endif %}
+
+				<div id="accordion">
+					<div class="card">
+						<div class="card-header bg-primary" id="headingOne" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" class="active" >
+							<h5 class="mb-0">
+								<span class="text-primary font-weight-bold" style="color: #FFF !important; font-size: 18px;">
+									Order Items
+								</span>
+							</h5>
+						</div>
+
+						<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+							<div class="card-body">
+								<table class="table table-bordered table-sm" style="font-size: 17px; font-weight: normal; font-family: -webkit-body;">
+									<thead>
+										<tr style="text-align: center;">
+											<th colspan="2">Product</th>
+											<th>Price</th>
+											<th>Qty</th>
+											<th>Amount</th>
+											{% if order_details.order_latest_status == 'DLD'%}
+											<th></th>
+											{% endif %}
+										</tr>
+									</thead>
+									<tbody id = "cart-body" style="padding-top:5px; ">
+										{% for item in order_items %}
+										<tr class="text-center">
+											<td><img src="/media/{{item.image}}" class="img-fluid" style="width: 150px; height: auto !important;" />
+											</td>
+											<td>
+												<p><b> {{ item.product.product_name }}</b></p>
+											</td>
+											<td> {{ order_currency }} {{item.price}} </td>
+											<td>{{item.quantity}}</td>
+											<td> {{ order_currency }} {{ item.product_price }}</td>
+											{% if order_details.order_latest_status == 'DLD'%}
+											<td><form method="post" action="/product-details/{{item.product.slug}}"> {% csrf_token %}
+												<input type="hidden" name="order_id" value="{{order_details.order_id}}" />
+												<input type="submit" class = " btn btn-link" name="write_review" value="Write review">
+											</form></td>
+											{% endif %}
+										</tr>
+										{% endfor %}
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="card">
+						<div class="card-header bg-primary" id="headingTwo" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+							<h5 class="mb-0">
+								<span class="text-primary font-weight-bold" style="color: #FFF !important; font-size: 18px;">
+									Payment Details
+								</span>
+							</h5>
+						</div>
+						<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+							<div class="card-body">
+								<table class="table table-bordered table-sm" style="font-size: 17px; font-weight: normal; font-family: -webkit-body;">
+									<tbody>
+										<tfoot>
+											<tr id="total_row">
+												<th colspan="3" class="text-left pl-2">Payment Mode: </th>
+												<th id ="grand_total" class="text-success">
+													{% if order_details.payment_method == "cod"%}
+													Cash On Delivery
+													{% endif %}
+												</th>
+											</tr>
+											<tr id="total_row">
+												<th colspan="3" class="text-left pl-2">Total Amount: </th>
+												<th id ="grand_total"> {{ order_currency }} {{ order_details.product_total}}</th>
+											</tr>
+											<tr id="total_row">
+												<th colspan="3" class="text-left pl-2">GST (18%): </th>
+												<th id ="grand_total"> {{ order_currency }} {{ order_details.product_gst_amount}}</th>
+											</tr>
+
+											<tr id="total_row">
+												<th colspan="3" class="text-left pl-2">Shipping Charge: </th>
+												<th id ="grand_total"> {{ order_currency }} {{ order_details.shipping_charge}}</th>
+											</tr>
+
+											<tr id="total_row">
+												<th colspan="3" class="text-left pl-2">Total Payable Amount: </th>
+												<th id ="grand_total"> {{ order_currency }} {{ order_details.product_payable_amount}}</th>
+											</tr>
+
+											<tr id="total_row">
+												<th colspan="3" class="text-left pl-2">Payment Status: </th>
+												<th id ="grand_total" >
+													{% if order_details.payment_status == "UNPAID" %}
+													<span class="text-warning">Pendding</span>
+													{% else %}
+													<span class="text-success">Paid</span>
+												{% endif %}</th>
+											</tr>
+										</tfoot>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="card">
+						<div class="card-header bg-primary" id="headingThree" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+							<h5 class="mb-0">
+								<span class="text-primary font-weight-bold" style="color: #FFF !important; font-size: 18px;">
+									Shipping Details
+								</span>
+							</h5>
+						</div>
+						<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+							<div class="card-body">
+								<h4>{{ order_details.address.name }}</h4>
+								<p>{{ order_details.address.address }}, </p>
+								{% if order_details.address.landmark %}
+								<p>{{ order_details.address.landmark }}, </p>
+								{% endif %}
+								<p>{{ order_details.address.city }}, {{ order_details.address.state.name }}, {{ order_details.address.country }} </p>
+								<p><b>Pincode:-</b> {{ order_details.address.pincode }} </p>
+								<p>
+									<b>Contact:- </b>{{ order_details.address.mobile }} 
+									{% if order_details.address.alternative_mobile %}
+									, {{ order_details.address.alternative_mobile }}
+									{% endif %}
+								</p>
+								<p>
+									<b>Address Type:- </b>{{ order_details.address.get_address_type_display }}
+								</p>
+							</div>
+						</div>
+					</div>
+					<div class="card">
+						<div class="card-header bg-primary" id="headingFour" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+							<h5 class="mb-0">
+								<span class="text-primary font-weight-bold" style="color: #FFF !important; font-size: 18px;">
+									Track Your Order
+								</span>
+							</h5>
+						</div>
+						<div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion">
+							<div class="card-body">
+								<div class="container mt-5 mb-5">
+									<div class="row">
+										<div class="col-md-6 offset-md-3">
+											{% regroup order_track by get_order_status_display as track_list %}
+											<h4>Track Order</h4>
+											<ul class="timeline">
+												{% for t in track_list %} 
+												<li class='done {% if t.grouper == 'Delivered'%}last{% endif %}'>
+													<h3> {{ t.grouper }} </h3>
+													{% for os in t.list %}
+													<p>{{ os.description }} {{ os.created_at }}</p>
+													{% endfor %}
+												</li>
+												{% endfor %}
+												{% if order_details.order_latest_status == 'ORD'%}
+												<li>Packed</li>
+												<li>Shipped</li>
+												<li>Out For Delivery</li>
+												<li>Delivered</li>
+												{% endif %}
+												{% if order_details.order_latest_status == 'PKD'%}
+												<li>Shipped</li>
+												<li>Out For Delivery</li>
+												<li>Delivered</li>
+												{% endif %}
+												{% if order_details.order_latest_status == 'SPD'%}
+												<li>Out For Delivery</li>
+												<li>Delivered</li>
+												{% endif %}
+												{% if order_details.order_latest_status == 'OFD'%}
+												<li>Delivered</li>
+												{% endif %}
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</h5>
+		</div>
+	</div>
+	<style type="text/css">
+		ul.timeline {
+			list-style-type: none;
+			position: relative;
+		}
+		ul.timeline:before {
+			content: ' ';
+			background: #d4d9df;
+			display: inline-block;
+			position: absolute;
+			left: 29px;
+			width: 2px;
+			height: 100%;
+			z-index: 400;
+		}
+
+		ul.timeline > li: last-child : before{
+			border: none !important;
+		}
+		ul.timeline > li {
+			margin: 20px 0;
+			padding-left: 20px;
+		}
+		ul.timeline > li:before {
+			content: ' ';
+			background: white;
+			display: inline-block;
+			position: absolute;
+			border-radius: 50%;
+			border: 3px solid #22c0e8;
+			left: 20px;
+			width: 20px;
+			height: 20px;
+			z-index: 400;
+		}
+		ul.timeline > .done:before{
+			background: #22c0e8;
+		}
+	</style>
+	{% endblock%}

@@ -1,0 +1,165 @@
+{% extends "shop/basic.html" %}
+
+{%block title%}{{page_title}} {% endblock%}
+
+{%block body%}
+{% load static %}
+{% load humanize %}
+<div class="col-12">
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item"><a href="/">Home</a></li>
+	    {% for bd in breadcrumbs reversed %}
+	    <li class="breadcrumb-item"><a href="{{bd.url}}">{{bd.label}}</a></li>
+	    {% endfor %}
+        {% if page_title == 'Search Page'%}
+        <li class="breadcrumb-item active" aria-current="page">Search</li>
+        {% else %}
+	    <li class="breadcrumb-item active" aria-current="page">{{category.title}}</li>
+        {% endif %}
+	  </ol>
+	</nav>
+    <!-- Main Content -->
+    <main class="row">
+    	{% if related_categories %}
+
+    	<!-- Featured Products -->
+            <div class="col-12">
+                <div class="row">
+                <div class="col-12 py-2">
+                    <div class="row">
+                        <div class="col-12 text-center text-uppercase">
+                            <h2>Related Collections</h2>
+                        </div>
+                    </div>
+                    <div class="row">
+
+                        {% for rc in related_categories %}
+                        <!-- Category -->
+                        <div class="col-lg-2 col-sm-6 my-2">
+                            <div class="col-12 bg-white text-center h-100 product-item">
+                                <div class="row h-100">
+                                    <div class="col-12 p-0 mb-3">
+                                        <a href="/collections/{{rc.slug}}">
+                                            <img src="/media/{{rc.image}}" class="img-fluid" style="width: 100%">
+                                        </a>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <a href="/collections/{{rc.slug}}" class="product-name">{{rc.title}}</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Category -->
+
+                        {% empty %}
+                            <div class="container">No collection found.</div>
+                        {% endfor %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Category List -->
+        {% endif %}
+
+        <!-- Category Products -->
+        <div class="col-12">
+            <div class="row">
+                <div class="col-12 py-3">
+                    <div class="row">
+                        <div class="col-12 text-center text-uppercase">
+                            <h2>Our Products</h2>
+                        </div>
+                    </div>
+                    <div class="row">
+
+                    	{% for prod in products %}
+                        <!-- Product -->
+                        <div class="col-xl-2 col-lg-3 col-sm-6 my-3">
+                            <div class="col-12 bg-white text-center h-100 product-item">
+                                <div class="row h-100">
+                                    <div class="col-12 p-0 mb-3">
+                                        <a href="/product-details/{{prod.slug}}">
+                                            <img src="/media/{{prod.image}}" class="img-fluid" style="height: 150px;">
+                                        </a>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <a href="/product-details/{{prod.slug}}" class="product-name">{{prod.product_name}}</a>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        {% if prod.old_price != 0 %}
+                                        <span class="product-price-old">
+                                            {{prod.currency_symbol}} {{prod.old_price|intcomma}}
+                                        </span>
+                                        {% endif %}
+                                        <br>
+                                        <span class="product-price">
+                                            {{prod.currency_symbol}} {{prod.price|intcomma}}
+                                        </span>
+                                    </div>
+                                    <div class="col-12 mb-3 align-self-end">
+                                    	{% if prod.quantity > 0 %}
+                                    	<input type="number" id="qty" min="1" value="1" class="form-control qty-{{prod.product_id}}"  data-total-qty = {{prod.quantity}} required="" style="width: 56px; float: left;">
+                                        <button class="btn btn-outline-dark add-to-cart " data-id = "{{prod.product_id}}" type="button"><i class="fas fa-cart-plus mr-2"></i>Add to cart</button>
+                                        {% else %}
+                                        <div class="text-danger"> Out Of Stock </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                                <div class="container text-danger" style="text-align: center; font-weight: bold;">No Product found in {{category.title}}'s collection.</div>
+                        <!-- Product -->
+                        {% endfor %}
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Category Products -->
+        {% if products.has_previous or products.has_next %}
+        <div class="col-12">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center">
+                	{% if products.has_previous %}
+                    <li class="page-item">
+                        {% if query == '' %}
+                        <a class="page-link" href="?page={{ products.previous_page_number }}" tabindex="-1" aria-disabled="true"><i class="fas fa-long-arrow-alt-left"></i></a>
+                        {% else %}
+                         <a class="page-link" href="?page={{ products.previous_page_number }}&query = {{query}}" tabindex="-1" aria-disabled="true"><i class="fas fa-long-arrow-alt-left"></i></a>
+
+                        {% endif %}
+                    </li>
+                    {% endif %}
+                    
+                    {% for n in page_range %}
+                    <li class="page-item {% if products.number == n %}active{% endif%} " aria-current="page">
+                        {% if query == '' %}
+                        <a class="page-link" href="?page={{n}}">{{n}} </a>
+                        {% else %}
+                        <a class="page-link" href="?page={{n}}&query={{query}}">{{n}} </a>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                    {% if products.has_next %}
+                    <li class="page-item">
+                        {% if query == '' %}
+                        <a class="page-link" href="?page={{ products.next_page_number }}"><i class="fas fa-long-arrow-alt-right"></i></a>
+                        {% else %}
+                        <a class="page-link" href="?page={{ products.next_page_number }}&query = {{query}}"><i class="fas fa-long-arrow-alt-right"></i></a>
+                        {% endif %}
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+    </main>
+    <!-- Main Content -->
+    <script type="text/javascript" src="{%static 'shop/js/add-to-cart.js' %}"></script>
+</div>
+{% endblock%}

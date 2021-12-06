@@ -1,0 +1,386 @@
+{% extends "shop/myaccount/account_basic.html" %}
+
+{%block title%}My Address - {{ current_user.first_name }} {% endblock%}
+
+{%block body%}
+
+	<div class="col-md-9">
+		<div class="card" >
+			<div class="card-body">
+				<h5 class="card-title">
+					My Address 
+					{% if address_count < 6 %}
+					<button class="btn btn-primary" id ="add-new-address pull-right" style="float: right; margin-bottom: 10px;" data-toggle="modal" data-target="#myModal" type="button">Add New Address</button>
+					{% endif %}
+				</h5>
+
+				<table class="table">
+					<thead class="thead-dark">
+						<tr>
+							<th scope="col">#</th>
+							<th scope="col">Name</th>
+							<th scope="col">Mobile</th>
+							<th scope="col">Address</th>
+							<th scope="col">City</th>
+							<th scope="col">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for add in address %}
+						<tr>
+							<th scope="row"><label>
+								{{forloop.counter}}{% if add.default_address %}<span class="text-success" style="font-weight: bold;" title="Default Address">*</span>{% endif %}
+							</th>
+							<td>{{add.name}}</td>
+							<td>{{add.mobile}}</td>
+							<td>{{add.address}}</td>
+							<td>{{add.city}}</td>
+							<td>
+								<button type="button" class="view_address btn btn-xs btn-primary" data-id = '{{add.address_id}}' title="View Details" style="font-size: 12px;"><i class="far fa-eye" ></i></button>
+								<button type="button" class="edit_address btn btn-xs btn-secondary" data-id = '{{add.address_id}}' title="Edit" style="font-size: 12px;"><i class="fas fa-edit"></i></button>
+								<a href="/my-address/delete/{{add.address_id}}" class="delete_address btn btn-xs btn-danger" title="Delete" style="font-size: 12px;" onclick="return confirm('Are you sure you want do delete it?')"><i class="fas fa-trash-alt"  ></i></a>
+								{% if add.default_address %}
+								{% else %}
+								<a href="/my-address/mark-as-default/{{add.address_id}}" class=" btn btn-xs btn-info" title="Mark As Default" style="font-size: 12px;"><i class="fas fa-bookmark" ></i></a>
+								{% endif %}
+							</td>
+						</tr>
+						{% empty %}
+							<th colspan="6"> No address found.</th>
+						{% endfor %}
+					</tbody>
+				</table>
+				{%for message in messages %}
+	                 {%if "success" in message.tags %}
+	                      <div style="color:green; font-weight: bold;"> {{message}} </div>
+	                 {%endif%}
+	            {%endfor%}
+	            <p class="text-info" style="float: right;">***Maximum 6 address allowed.</p>
+			</div>
+		</div>
+	</div>
+
+<!-- The Modal -->
+<div class="modal" id="ViewRecord">
+	<div class="modal-dialog">
+		<div class="modal-content">
+
+			<!-- Modal Header -->
+			<div class="modal-header">
+				<h4 class="modal-title text-primary">My Address</h4>
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+			</div>
+
+			<!-- Modal body -->
+			<div class="modal-body">
+				<table class="table" id="address-detail-table">
+					
+				</table>
+
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- The Modal -->
+<div class="modal" id="myModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h4 class="modal-title text-primary">Add Address</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      <!-- Modal body -->
+      <div class="modal-body">
+        <form method="post" action="/my-address" onsubmit="return validate_form();">
+                    {%csrf_token%}
+		            <input type="hidden" id="address_id" name="address_id" class="form-control" value = "0"/>
+                    <div class="row">
+                    	<div class="col-md-12">
+		                    <div class="form-group">
+		                        <label for="name">Name</label>
+		                        <input type="text" id="name" name="name" class="form-control" />
+		                    </div>
+                    	</div>
+                    	<div class="col-md-12">
+		                    <div class="form-group">
+		                        <label for="mobile">Mobile</label>
+		                        <input type="mobile" id="mobile" name="mobile" class="form-control">
+		                    </div>
+                    	</div>
+                    </div>
+
+                    <div class="row">
+                    	<div class="col-md-12">
+		                    <div class="form-group">
+		                        <label for="alt_mobile">Mobile (Alternative)</label>
+		                        <input type="text" id="alt_mobile" name="alt_mobile" class="form-control">
+		                    </div>
+                    	</div>
+                    	<div class="col-md-12">
+		                    <div class="form-group">
+		                        <label for="pincode">Pincode</label>
+		                        <input type="text" id="pincode" name="pincode" class="form-control">
+		                    </div>
+                    	</div>
+                    </div>
+
+                    <div class="row">
+                    	<div class="col-md-12">
+		                    <div class="form-group">
+		                        <label for="address">Address</label>
+		                        <textarea id="address" name="address" class="form-control"></textarea>
+		                    </div>
+                    	</div>
+                    </div>
+
+                    <div class="row">
+                    	<div class="col-md-12">
+		                    <div class="form-group">
+		                        <label for="country">Country</label>
+		                        <select id="country" name="country" class="form-control">
+		                        	<option value="">Select Country</option>
+		                        	{% for c in countries %}
+		                        	<option value="{{ c.id }}" {% if c.id == 101 %} selected {% endif %}>{{ c.name }}</option>
+		                        	{% endfor %}
+		                        </select>
+		                    </div>
+                    	</div>
+                    </div>
+
+                    <div class="row">
+                    	<div class="col-md-12">
+		                    <div class="form-group">
+		                        <label for="state">State</label>
+		                        <select id="state" name="state" class="form-control">
+		                        	<option value="">Select State</option>
+		                        	{% for s in states %}
+		                        	<option value="{{ s.id }}">{{ s.name }}</option>
+		                        	{% endfor %}
+		                        </select>
+		                    </div>
+                    	</div>
+                    </div>
+
+                    <div class="row">
+                    	<div class="col-md-12">
+		                    <div class="form-group">
+		                        <label for="city">City</label>
+		                        <input type="text" id="city" name="city" class="form-control">
+		                    </div>
+                    	</div>
+                    </div>
+
+                    <div class="row">
+                    	<div class="col-md-12">
+		                    <div class="form-group">
+		                        <label for="landmark">Land Mark</label>
+		                        <input type="text" id="landmark" name="landmark" class="form-control">
+		                    </div>
+                    	</div>
+                    </div>
+
+                    <div class="row">
+                    	<div class="col-md-12">
+		                    <div class="form-group">
+		                        <label for="address_type">Address Type</label>
+		                        <select id="address_type" name="address_type" class="form-control">
+		                        	<option value="HOME">Home</option>
+		                        	<option value="OFFICE">Office</option>
+		                        </select>
+		                    </div>
+                    	</div>
+                    </div>
+
+
+                    <div class="row">
+                    	<div class="col-md-12">
+		                    <div class="form-group">
+		                        <button type="submit" class="btn btn-primary">Add Address</button><br>
+		                    </div>
+		                </div>
+		            </div>
+                </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- End The Modal -->
+<script type="text/javascript">
+	function validatePhoneNo(phone){
+		var phone_pattern = /\(?([0-9]{3})\)?([ .-]?)([0-9]{3})\2([0-9]{4})/;
+		return phone_pattern.test(phone)
+	}
+
+	function validatePincode(pincode){
+		var pincode_pattern = /^(\d{4}|\d{6})$/;
+		return pincode_pattern.test(pincode)
+	}
+
+	function check_required(field_name, field_value){
+		var val = true;
+		test_value = $("#"+field_name).val();
+		$('.'+field_name+'_error').remove();
+		if (test_value ==""){
+			$("<p class='text-danger "+field_name+"_error'>"+field_value+" required.</p>").insertAfter($('#'+field_name));
+			val = false;
+		}
+		return val
+	}
+
+	function check_valid_number(field_name, field_value){
+		var val = true;
+		test_value = $("#"+field_name).val();
+		$('.'+field_name+'_error').remove();
+		if (test_value !=""){
+			if(validatePhoneNo(test_value) === false){
+				$("<p class='text-danger "+field_name+"_error'> Invalid "+field_value+" Number.</p>").insertAfter($('#'+field_name));
+				val = false;
+			}
+		}
+		return val
+	}
+
+	function check_valid_pincode(field_name, field_value){
+		var val = true;
+		test_value = $("#"+field_name).val();
+		$('.'+field_name+'_error').remove();
+		if (test_value !=""){
+			if(validatePincode(test_value) === false){
+				$("<p class='text-danger "+field_name+"_error'> Invalid "+field_value+" Number.</p>").insertAfter($('#'+field_name));
+				val = false;
+			}
+		}
+		return val
+	}
+
+	function validate_form(){
+		var val = true;
+		var mobile = $("#mobile").val();
+		var pincode = $("#pincode").val();
+		var required_field_array  = {
+			"name":"Name",
+			"mobile":"Mobile",
+			"pincode":"Pincode",
+			"address":"Address",
+			"country":"Country",
+			"city":"City"
+		};
+		for (var key in required_field_array){
+			val = check_required( key, required_field_array[key])
+		}
+
+		var mobile_field_array = {
+			"mobile":"Mobile",
+			"alt_mobile":"Mobile (Alternative)"
+		};
+
+		var validatePhone = true;
+
+		for (var key in mobile_field_array){
+			if(mobile != ""){
+				validatePhone = check_valid_number( key, mobile_field_array[key])
+			}
+		}
+		var pincode_filed = "pincode";
+		var pincode_value = "Pincode";
+		if(pincode!=""){
+			var pinvallid = check_valid_pincode(pincode_filed, pincode_value);
+		}
+
+		if(val == true && pinvallid==true && validatePhone == true){
+
+			return true;
+		}
+		return false;
+	}
+	window.onload = function(){
+		$("#country").change(function(){
+			var country_id = $(this).val();
+			$.get("/ajax_state/"+country_id, function(data, status){
+				var state = JSON.parse(data);
+				$('#state').empty();
+			    for (var i =0; i < state.length; i++){
+			    	$('#state')
+			    	.append('<option value="'+state[i].pk+'">'+state[i].fields.name+'</option>');
+			    }
+			});
+		});
+
+		$(".view_address").on('click', function() {
+			var id = $(this).attr('data-id');
+			$.get("/ajax_my_adress/"+ id, function(data, status){
+				var address = JSON.parse(data)[0];
+				var add_field =  address.fields
+				$("#ViewRecord").modal();
+				function appendAddressDetails(array, field_key, field_value){
+					$('#address-detail-table').append("<tr><th>"+field_value+":</th><td>"+array[field_key]+"</td></tr>");
+				}
+				var field_array  = {
+					"name":"Name",
+					"mobile":"Mobile",
+					"alternative_mobile":"Mobile (Alternative)",
+					"pincode":"Pincode",
+					"address":"Address",
+					"address_type":"Address Type",
+					"landmark":"Landmark",
+					"city":"City"
+				};
+
+				for (var key in field_array){
+					appendAddressDetails(add_field, key, field_array[key])
+				}
+				var state = add_field.state;
+				$.get("/ajax_state/get/"+state, function(data, status){
+					var state = JSON.parse(data);
+				    for (var i =0; i < state.length; i++){
+				    	$('#address-detail-table').append("<tr><th>State:</th><td>"+state[i].fields.name+"</td></tr>");
+				    }
+				});
+
+				var country = add_field.country;
+				$.get("/ajax_country/get/"+country, function(data, status){
+					var state = JSON.parse(data);
+				    for (var i =0; i < state.length; i++){
+				    	$('#address-detail-table').append("<tr><th>Country:</th><td>"+state[i].fields.name+"</td></tr>");
+				    }
+				});
+			});
+		});
+
+		$(".edit_address").on('click', function() {
+			var id = $(this).attr('data-id');
+			$.get("/ajax_my_adress/"+ id, function(data, status){
+				var address = JSON.parse(data)[0];
+				var add_field =  address.fields
+				$("#myModal").modal();
+				var field_array  = {
+					"address_id":address.pk,
+					"name":add_field.name,
+					"mobile":add_field.mobile,
+					"alt_mobile":add_field.alternative_mobile,
+					"pincode":add_field.pincode,
+					"address":add_field.address,
+					"address_type":add_field.address_type,
+					"landmark":add_field.landmark,
+					"city":add_field.city,
+					"state":add_field.state,
+					"country":add_field.country
+				};
+
+				function editFormAddressDetails(field_id, field_value){
+					$('#'+field_id).val(field_value);
+				}
+
+				for (var key in field_array){
+					editFormAddressDetails(key, field_array[key])
+				}
+			});
+		});
+	};
+</script>
+{% endblock%}

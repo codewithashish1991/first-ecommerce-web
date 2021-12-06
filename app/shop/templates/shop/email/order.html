@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Order Details</title>
+</head>
+<body>
+	{% load humanize %}
+	
+	<h1 style="text-align: center;">Deal With Us</h1>
+	<h2>Your Deal With Us Order No:- {{order_id}}</h2>
+	<p>Hello {{address.name}},<br></p>
+	<p>Thank you for shopping with us. We'd like to let you know that your order has been recieved, and is preparing it for shipment. Your estimated delivery date is indicated below.</p>
+	<hr style="border: 1px double gray;">
+	<!--Product List Start Here -->
+	<table style="font-size: 17px; font-weight: normal; font-family: -webkit-body; border: 1px solid #000; width:100%;">
+		<thead>
+			<tr style="text-align: center;">
+				<th style="border: 1px solid #000;  text-align: center;">Product</th>
+				<th style="border: 1px solid #000;">Price</th>
+				<th style="border: 1px solid #000;">Qty</th>
+				<th style="border: 1px solid #000;">Amount</th>
+			</tr>
+		</thead>
+		<tbody id = "cart-body" style="padding-top:5px; ">
+			{% for i in Items %}
+			
+
+			<tr class="text-center">
+					<td style="border: 1px solid #000; text-align: center;">
+						<p><b> {{ i.product_name }}</b></p>
+					</td>
+					<td style="border: 1px solid #000; text-align: center;" attr-price = "{{i.price}}" id="price_{{ i.product_id }}"> {{ order_currency }} {{i.price|intcomma}} </td>
+					<td style="border: 1px solid #000; text-align: center;" id ='qty_{{ i.product_id }}'>
+						{% for ct in cart_data %}
+						{% if ct.product_id == i.product_id %}
+						{{ct.product_quantity}}
+						{% endif %}
+						{% endfor %}
+					</td>
+						<td style="border: 1px solid #000; text-align: center;" >  {% for pp in prodPrice%}
+						{% if pp.pId ==  i.product_id %}
+						{{pp.price|intcomma}}
+						{% endif %} 
+						{% endfor %} 
+					</td>
+				</tr>
+			{% endfor %}
+			<tr id="total_row">
+                <th colspan="3"  style="border: 1px solid #000; text-align: right; padding-right: 10px;">Total:</th>
+                <th id ="grand_total"  style="border: 1px solid #000; text-align: center;" colspan="2"> {{ order_currency }} {{amount|intcomma}}</th>
+                <th></th>
+            </tr>
+            <tr id="total_row">
+                <th colspan="3"  style="border: 1px solid #000; text-align: right; padding-right: 10px;">GST(18%): </th>
+                <th id ="grand_total"  style="border: 1px solid #000; text-align: center;" colspan="2"> {{ gst|intcomma }} {{shipping_charge}}</th>
+                <th></th>
+            </tr>
+            <tr id="total_row">
+                <th colspan="3"  style="border: 1px solid #000; text-align: right; padding-right: 10px;">Shipping Charge: </th>
+                <th id ="grand_total"  style="border: 1px solid #000; text-align: center;" colspan="2"> {{ order_currency }} {{shipping_charge|intcomma}}</th>
+                <th></th>
+            </tr>
+            <tr id="total_row">
+                <th colspan="3"  style="border: 1px solid #000; text-align: right; padding-right: 10px;">Grand Total: </th>
+                <th id ="grand_total"  style="border: 1px solid #000; text-align: center;" colspan="2"> {{ order_currency }} {{total_amount}}</th>
+                <th></th>
+            </tr>
+		</tbody>
+	</table>
+	<!--Prodct List End Here-->
+	<hr style="border: 1px double gray;">
+	<div style="width: 50%; float:left;">
+		<h2>Expected to arrive at:</h2>
+		{{expected_date}}
+		<p>Your shipping speed:<br>
+		<b>Standard Delivery</b></p>
+		<a href="http://localhost:8000/orders/{{order_id}}" style="margin-top: 71px; display: block; width: 300px; height: 50px; line-height: 50px; text-align: center; background: #0077cc; color: white; text-decoration: none;" target="_blank">View Order Details</a>
+	</div>
+	<div style="width: 50%; float:left;">
+		<h2>Delivery Address:</h2>
+		{{address.name}}
+		<p>{{ address.address }}, </p>
+		{% if address.landmark %}
+		<p>{{ address.landmark }}, </p>
+		{% endif %}
+		<p>{{ address.city }}, {{ address.state.name }}, {{ address.country }} </p>
+		<p><b>Pincode:-</b> {{ address.pincode }} </p>
+		<p>
+			<b>Contact:- </b>{{ address.mobile }} 
+			{% if address.alternative_mobile %}
+			, {{ address.alternative_mobile }}
+			{% endif %}
+		</p>
+		<p>
+			<b>Address Type:- </b>{{ address.get_address_type_display }}
+		</p>
+	</div>
+	<hr style="border: 1px double gray;">
+
+	<div style="clear:both;"></div>
+	<p>To ensure your safety, the Delivery Agent will drop the package at your doorstep, ring the doorbell and then move back 2 meters while waiting for you to collect your package. If you are in a containment zone, the agent will call you and request you to collect your package from the nearest accessible point while following the same No-Contact delivery process.<br><br>
+
+We hope to see you again soon.</p>
+
+	<p><b>Thanks & Regards</b><br></p>
+	
+	<h2>Deal With Us Team</h2>
+</body>
+</html>

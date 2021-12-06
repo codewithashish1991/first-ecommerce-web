@@ -1,0 +1,10 @@
+// for backup database
+
+sudo docker exec -t firstecommerceweb_postgres_1 pg_dumpall -c -U root > dump_`date +%d-%m-%Y"_"%H_%M_%S`.sql
+
+sudo docker exec -t firstecommerceweb_postgres_1 pg_dumpall -c -U root > dump_`date +%d-%m-%Y`.sql
+
+
+// for restore data
+
+cat dump_13-07-2020.sql | docker exec -i firstecommerce_postgres_1 psql -U root -d shop

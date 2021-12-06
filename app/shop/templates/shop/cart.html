@@ -1,0 +1,165 @@
+{% extends "shop/basic.html" %}
+
+{%block title%}My Cart{% endblock%}
+
+{%block body%}
+<div class="col-12">
+    <!-- Main Content -->
+    <div class="row">
+        <div class="col-12 mt-3 text-center text-uppercase">
+            <h2 id= "ptitle">My Cart</h2>
+        </div>
+    </div>
+
+    <main class="row">
+        <div class="col-12 bg-white py-3 mb-3">
+            <div class="row">
+                <div class="col-lg-10 col-md-8 col-sm-10 mx-auto table-responsive">
+                    <form class="row">
+                        <div class="col-12">
+                            <table class="table table-striped table-hover table-sm">
+                                <thead>
+                                <tr style="text-align: center;">
+                                    <th >Product</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Amount</th>
+                                    <th></th>
+                                </tr>
+                                </thead>
+                                <tbody id = "cart-body">
+                                
+                                </tbody>
+                                <tfoot>
+                                <tr id="total_row">
+                                    <th colspan="3" class="text-right">Total</th>
+                                    <th id ="grand_total" style="text-align: center;">$4,000</th>
+                                    <th></th>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="col-12 text-right button-body">
+                            <a class="btn btn-outline-secondary mr-3" type="submit" onclick="updateCart();">Update</a>
+                            <a href="/checkout" class="btn btn-outline-success">Checkout</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </main>
+    <!-- Main Content -->
+    {% csrf_token %}
+</div>
+<script type="text/javascript">
+    window.onload = function(){
+    	if(localStorage.getItem('cart') !== null){	
+			var cartProductCount = localStorage.getItem('cart');
+		    var mycart = JSON.parse(cartProductCount);
+	    	cartList(mycart);
+    	}else{
+    		$('#total_row').html('');
+    		$('.button-body').html('');
+    		$('<tr><th colspan="4" style="text-align:center; color: red; line-height:100px;">No product found in cart. </th></tr>').insertAfter($('#cart-body'));
+    	}
+    }
+    function removeFromCart(product_id){
+    	var  confirm = window.confirm("Are you sure you want to remove it from cart.");
+    	var cart_products = localStorage.getItem('cart');
+	    var mycart = JSON.parse(cart_products);
+    	if(confirm == true){
+    		mycart.splice(mycart.findIndex(e => e.product_id === product_id), 1);
+    		localStorage.setItem('cart', JSON.stringify(mycart));
+    		window.location.reload();
+    	}
+    }
+	function updateCart(){
+		var cart_products = localStorage.getItem('cart');
+	    var mycart = JSON.parse(cart_products);
+	    for (var i =  0; i < mycart.length; i++) {
+	    	var pId = mycart[i]['product_id'];
+	    	var getIndex = mycart.findIndex(e => e.product_id === pId)
+	    	var qty = $("#qty_"+pId).val();
+	    	var total_qty = parseInt($("#qty_"+pId).attr('data-total-qty'));
+	    	if(parseInt(qty) > total_qty){
+	    		$('#buttonErrorAlert').addClass('show');
+	    		$('#errors-body').html('Product quanity has been finished!');
+	    		setTimeout(function() {
+			        $('#buttonErrorAlert').removeClass('show');
+			    }, 2000);
+			    $("<p class = 'text-danger'> No more quantity allow of this  product</p>").insertAfter($("#qty_"+pId));
+	    		return false;
+	    	}else{
+
+	    	}
+	    	mycart[getIndex]['product_quantity'] = qty
+	    }
+	    localStorage.setItem('cart', JSON.stringify(mycart));
+	    $('#buttonSuccessAlert').addClass('show');
+    	$('#success-body').html('Product quantity updated in your cart successfully!');
+    	setTimeout(function() {
+	        $('#buttonSuccessAlert').removeClass('show');
+	    }, 2000);
+	    window.location.reload();
+	}
+
+    function cartList(mycart){
+	    var count = 0
+	    var token = $(document).find('input[name = "csrfmiddlewaretoken"]').val();
+	    if(mycart !== null){
+	        count = mycart.length;
+	    }
+	    document.title = 'My Cart('+count+')';
+	    document.getElementById('ptitle').innerHTML = 'My Cart('+count+')';
+
+	    $.ajax({
+	    	type:"POST",
+	    	url: '/get_cart_product',
+	    	data: {"cartData": cartProductCount, 'csrfmiddlewaretoken': token },
+	    	success: function(data){
+	    		var products = JSON.parse(data);
+	    		var grand_total = 0;
+	    		if(products.length > 0){
+					for(var i = products.length - 1; i >= 0; i--){
+						var prod_id = products[i]['id'];
+						var prod_qty = products[i]['qty'];
+						var prod_name = products[i]['name'];
+						var prod_price = products[i]['price'];
+						var prod_currency = products[i]['currency'];
+						var prod_img = products[i]['image'];
+						var prod_total_quantity = products[i]['total_quantity'];
+						var total_amout = prod_qty*prod_price;
+						grand_total = grand_total + total_amout
+						var cartContent = '<tr style="text-align:center;"><td><img src="/media/'+prod_img +'" class="img-fluid"><p><b>'+ prod_name +'</b></p></td><td>'+prod_currency+prod_price.toLocaleString('en-IN')+'</td><td><input type="number" min="1" value="'+prod_qty+'" id ="qty_'+prod_id+'" data-total-qty="'+prod_total_quantity+'"></td><td>'+prod_currency + total_amout.toLocaleString('en-IN') +'</td><td><a class="btn btn-link text-danger remove-from-cart" onclick="removeFromCart('+prod_id+')"><i class="fas fa-times"></i></a></td></tr>';
+						$(cartContent).insertAfter($('#cart-body'));
+					}
+					$('#grand_total').html(prod_currency + grand_total.toLocaleString('en-IN'));
+					var gst_price = (18/100)*grand_total;
+					var sub_total = grand_total+ gst_price
+					if(prod_currency != "₹"){
+						var shippingCharge = '<tr id="trow-schange"><th colspan="3" class="text-right">Shipping Charge</th><th id ="s_charge" style="text-align: center;">'+prod_currency+'20</th><th></th></tr>';
+						$(shippingCharge).insertAfter($('#total_row'));
+						sub_total = sub_total + 20	
+					}
+					sub_total = sub_total.toFixed(2);
+					
+					var gst = '<tr id="trow"><th colspan="3" class="text-right">GST(18%)</th><th id ="s_charge" style="text-align: center;">'+prod_currency+gst_price.toLocaleString('en-IN')+'</th><th></th></tr>';
+					var subTotal = '<tr id="subrow"><th colspan="3" class="text-right">Grand Total</th><th id ="gt" style="text-align: center;">'+prod_currency+parseInt(sub_total).toLocaleString('en-IN')+'</th><th></th></tr>';
+					$(gst).insertAfter($('#total_row'));
+					if(document.body.contains(document.getElementById('trow-schange'))){
+						$(subTotal).insertAfter($('#trow-schange'));
+					}else{
+						$(subTotal).insertAfter($('#trow'));
+					}
+		    	}else{
+		    		$('#total_row').html('');
+		    		$('.button-body').html('');
+		    		$('<tr><th colspan="4" style="text-align:center; color: red; line-height:100px;">No product found in cart. </th></tr>').insertAfter($('#cart-body'));
+		    	}
+	    	}
+	    });
+	    
+    };
+</script>
+{% endblock%}
